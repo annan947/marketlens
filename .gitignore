@@ -71,3 +71,9 @@ Desktop.ini
 *.zip
 *.exe
 *.msi
+*.dll
+*.o
+*.obj
+*.a
+*.lib
+*.pdb

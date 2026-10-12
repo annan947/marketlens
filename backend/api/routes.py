@@ -68,7 +68,7 @@ def gbm_simulation(body: SimulationRequest):
     tail = (1 - body.confidence) / 2
     bands = np.quantile(prices, [tail, .5, 1-tail], axis=1)
     counts, edges = np.histogram(prices[-1], bins=min(50, max(1, int(np.sqrt(body.paths)))))
-    return dict(seed=body.seed, paths=body.paths,
+    return dict(seed=body.seed, paths=body.paths, engine=body.engine,
         times=np.linspace(0, body.years, body.steps + 1).tolist(),
         sample_paths=prices[:, :body.sample_paths].T.tolist(),
         lower_band=bands[0].tolist(), median_band=bands[1].tolist(), upper_band=bands[2].tolist(),

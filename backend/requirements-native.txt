@@ -1,0 +1,2 @@
+# Optional native build dependency; not required for the NumPy application.
+pybind11>=3.0,<4

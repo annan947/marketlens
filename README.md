@@ -36,7 +36,7 @@ PostgreSQL integration test is ready.
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, Recharts
 - **Testing:** pytest, Vitest, Testing Library
 - **Deployment:** Docker Compose, Nginx, environment configuration
-- **Planned:** C++/pybind11 acceleration with parity tests and reproducible benchmarks
+- **Optional native engine:** C++17/pybind11 GBM kernel, parity tests and reproducible benchmarks
 
 ## Architecture
 
@@ -124,7 +124,7 @@ npm --prefix frontend test
 npm --prefix frontend run build
 ```
 
-Latest local results: **119 backend tests passed, one PostgreSQL test skipped,
+Latest local results: **128 backend tests passed, one PostgreSQL test skipped,
 21 frontend tests passed**, and the TypeScript/Vite build passed.
 
 Tests cover reference option prices, finite-difference Greeks, GBM moments and
@@ -162,8 +162,8 @@ See [development/model documentation](docs/DEVELOPMENT.md) for detailed conventi
 - [ ] Verify PostgreSQL and Docker deployment end to end
 - [ ] Publish and validate a hosted portfolio demo
 - [ ] Add authentication and per-user authorization for shared persistence
-- [ ] Implement C++ Monte Carlo with pybind11 and numerical parity tests
-- [ ] Benchmark against NumPy before claiming a performance improvement
+- [x] Implement optional C++ Monte Carlo with pybind11 and numerical parity tests
+- [x] Benchmark against NumPy; local call timings and scope are documented in [native/README.md](native/README.md)
 - [ ] Extend walk-forward evaluation and deployment monitoring
 
 ## Repository layout
@@ -178,8 +178,17 @@ frontend/src/      Dashboard, charts, forms and frontend tests
 deploy/            Dockerfiles, Compose, Nginx and local helpers
 docs/              Development notes and hosting walkthrough
 render.yaml        Free-tier public-demo configuration
+native/            Optional C++ kernel, build helper and benchmark results
+scripts/           Redacting Git secret-audit helper
 ```
 
 MarketLens is developed incrementally, with each phase checked before expanding
 the scope. The goal is understandable, reproducible full-stack engineering with
 honest model limitations and measured performance.
+
+Before publishing changes, run `python scripts/audit_secrets.py --history` after
+staging. It checks staged content and reachable Git history for private/generated
+paths and common credential patterns, reporting filenames only. This is a heuristic
+check, not proof that every possible secret is absent. Keep real credentials in
+ignored environment files or private hosting settings and enable GitHub secret
+scanning/push protection where available. Compiled native binaries are ignored.

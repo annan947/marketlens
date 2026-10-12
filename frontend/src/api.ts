@@ -40,6 +40,7 @@ export interface Risk {
   value_at_risk: number; conditional_value_at_risk: number; maximum_drawdown: number;
 }
 export interface Simulation {
+  engine: 'numpy' | 'cpp';
   seed: number; paths: number; times: number[]; lower_band: number[]; median_band: number[]; upper_band: number[];
   sample_paths: number[][];
   summary: { mean_terminal_price: number; lower_terminal_price: number; upper_terminal_price: number; loss_probability: number };

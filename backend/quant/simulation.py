@@ -16,7 +16,7 @@ class SimulationSummary:
     confidence: float
 
 
-def simulate_gbm(spot, drift, volatility, years=1.0, steps=252, paths=1000, seed=42):
+def simulate_gbm(spot, drift, volatility, years=1.0, steps=252, paths=1000, seed=42, engine='numpy'):
     spot = scalar(spot, 'spot', minimum=0, strict=True)
     drift = scalar(drift, 'drift')
     volatility = scalar(volatility, 'volatility', minimum=0)
@@ -24,9 +24,18 @@ def simulate_gbm(spot, drift, volatility, years=1.0, steps=252, paths=1000, seed
     steps = integer(steps, 'steps')
     paths = integer(paths, 'paths')
     seed = integer(seed, 'seed', minimum=0)
+    if engine not in ('numpy', 'cpp'):
+        raise ValueError("engine must be 'numpy' or 'cpp'")
     if (steps + 1) * paths > MAX_PATH_VALUES:
         raise ValueError(f'simulation must contain at most {MAX_PATH_VALUES} path values')
     rng = np.random.default_rng(seed)
+    if engine == 'cpp':
+        try:
+            from . import _gbm_native
+        except ImportError as exc:
+            raise ValueError('C++ engine is unavailable; build native/build.py or select numpy') from exc
+        return _gbm_native.paths_from_shocks(spot, drift, volatility, years,
+                                             rng.normal(size=(steps, paths)))
     dt = years / steps
     try:
         with np.errstate(over='raise', invalid='raise', under='ignore'):

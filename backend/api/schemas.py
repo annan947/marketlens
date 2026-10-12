@@ -86,6 +86,7 @@ class RiskResponse(Contract):
 
 
 class SimulationRequest(Contract):
+    engine: Literal['numpy', 'cpp'] = 'numpy'
     spot: Annotated[Positive, Field(le=1e9)]
     drift: Annotated[Finite, Field(ge=-5, le=5)]
     volatility: Annotated[Finite, Field(ge=0, le=5)]
@@ -118,6 +119,7 @@ class Histogram(Contract):
 
 
 class SimulationResponse(Contract):
+    engine: Literal['numpy', 'cpp']
     seed: int
     paths: int
     times: list[Finite]

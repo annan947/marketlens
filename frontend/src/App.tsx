@@ -28,7 +28,8 @@ function Simulations() {
   const job = useJob<Simulation>();
   return <div className="workspace"><Panel title="Simulation parameters" note="Geometric Brownian Motion"><form onChange={job.clear} onSubmit={event => { const f = formData(event); job.run(signal => api('/api/v1/simulations/gbm', {
     spot: numeric(f, 'spot'), drift: numeric(f, 'drift') / 100, volatility: numeric(f, 'volatility') / 100,
-    years: numeric(f, 'years'), steps: numeric(f, 'steps'), paths: numeric(f, 'paths'), seed: numeric(f, 'seed'), confidence: numeric(f, 'confidence') / 100, sample_paths: 5 }, signal)); }}>
+    years: numeric(f, 'years'), steps: numeric(f, 'steps'), paths: numeric(f, 'paths'), seed: numeric(f, 'seed'), confidence: numeric(f, 'confidence') / 100, sample_paths: 5, engine: text(f, 'engine') }, signal)); }}>
+    <label className="field"><span>Computation engine</span><select name="engine"><option value="numpy">NumPy (default)</option><option value="cpp">C++ (requires native build)</option></select></label>
     <Num label="Initial price" name="spot" value={100} min={0.000001} /><div className="field-row"><Num label="Annual drift (%)" name="drift" value={7} min={-500} max={500} /><Num label="Volatility (%)" name="volatility" value={20} min={0} max={500} /></div>
     <div className="field-row"><Num label="Horizon (years)" name="years" value={1} min={0.001} max={30} /><Num label="Time steps" name="steps" value={252} min={1} max={2520} step={1} /></div>
     <div className="field-row"><Num label="Paths" name="paths" value={1000} min={1} max={100000} step={1} /><Num label="Random seed" name="seed" value={42} min={0} max={9007199254740991} step={1} /></div><Num label="Prediction interval (%)" name="confidence" value={95} min={0.01} max={99.99} /><Submit busy={job.busy}>Run simulation</Submit></form><p className="footnote">Constant drift and volatility. No jumps or transaction costs. The seed makes runs reproducible; these are model scenarios, not forecasts.</p></Panel>
@@ -38,7 +39,7 @@ function Simulations() {
       <p className="footnote">Horizon in years · Pointwise prediction bounds, not confidence intervals for a fitted mean.</p>
       <Chart data={job.data.times.map((t, i) => ({ x: Number(t.toFixed(3)), ...Object.fromEntries(job.data!.sample_paths.map((path, j) => [`path${j}`, path[i]])) }))} series={job.data.sample_paths.map((_, i) => ({ key: `path${i}`, name: `Sample path ${i+1}` }))} />
       <Chart histogram data={job.data.terminal_distribution.counts.map((count, i) => ({ x: number((job.data!.terminal_distribution.bin_edges[i] + job.data!.terminal_distribution.bin_edges[i+1]) / 2), count }))} series={[{ key: 'count', name: 'Paths per terminal-price bin' }]} />
-      <p className="footnote">{job.data.paths.toLocaleString()} simulated paths · Seed {job.data.seed}</p></>}</Panel></div>;
+      <p className="footnote">{job.data.paths.toLocaleString()} simulated paths · Seed {job.data.seed} · Engine {job.data.engine}</p></>}</Panel></div>;
 }
 
 function RiskView() {
