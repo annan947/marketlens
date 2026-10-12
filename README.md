@@ -186,6 +186,10 @@ MarketLens is developed incrementally, with each phase checked before expanding
 the scope. The goal is understandable, reproducible full-stack engineering with
 honest model limitations and measured performance.
 
+The [deployment-verification guide](docs/DEPLOYMENT-VERIFICATION.md) describes the
+GitHub Actions PostgreSQL/Linux build checks and real HTTP smoke test. A workflow
+definition is not a passing deployment: verify its result on the current commit.
+
 Before publishing changes, run `python scripts/audit_secrets.py --history` after
 staging. It checks staged content and reachable Git history for private/generated
 paths and common credential patterns, reporting filenames only. This is a heuristic

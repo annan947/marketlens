@@ -1,0 +1,68 @@
+name: Verify deployment
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: marketlens
+          POSTGRES_PASSWORD: marketlens_test
+          POSTGRES_DB: marketlens_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U marketlens -d marketlens_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      # Disposable CI service credentials, not production credentials.
+      MARKETLENS_TEST_POSTGRES_URL: postgresql+psycopg://marketlens:marketlens_test@127.0.0.1:5432/marketlens_test
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - run: python scripts/audit_secrets.py --history
+      - run: python -m pip install -r backend/requirements-dev.txt -r backend/requirements-native.txt -c backend/requirements-lock.txt
+      - run: python native/build.py
+      - run: python -m pytest -q
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: tests
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate disposable Compose credentials
+        run: |
+          python -c "import pathlib,secrets; pathlib.Path('deploy/.env').write_text('POSTGRES_PASSWORD='+secrets.token_hex(32)+'\nMARKETLENS_WEB_PORT=8080\n')"
+      - run: docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
+      - run: docker compose --env-file deploy/.env -f deploy/compose.yaml up --build -d --wait --wait-timeout 180
+      - run: python scripts/deployment_smoke.py
+      - name: Confirm storage still works after backend restart
+        run: |
+          docker compose --env-file deploy/.env -f deploy/compose.yaml restart backend
+          python scripts/deployment_smoke.py
+      - name: Stop disposable CI stack
+        if: always()
+        run: docker compose --env-file deploy/.env -f deploy/compose.yaml down
