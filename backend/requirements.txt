@@ -1,0 +1,11 @@
+# Runtime dependency ranges; deployment uses requirements-lock.txt.
+fastapi>=0.115,<1
+pydantic>=2.10,<3
+numpy>=2,<3
+pandas>=2.2,<4
+scipy>=1.14,<2
+yfinance>=0.2,<2
+uvicorn>=0.30,<1
+SQLAlchemy>=2.0,<2.1
+alembic>=1.16,<2
+psycopg[binary]>=3.2,<4
